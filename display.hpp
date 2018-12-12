@@ -129,4 +129,7 @@ private:
 	void render_text ();
 	Colors colors;
     int cursor_line = 0;
+    int cursor_row = 0;
+
+    int line_num_margin = 12;
 };
