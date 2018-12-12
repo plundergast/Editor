@@ -5,59 +5,67 @@
 
 struct Token
 {
-	int location;
-	std::string text;
-	enum class Type : int
-	{
-		Text = 0,
-		Keyword = 1,
-		Identifier = 2,
-		Branching = 3,
-		Looping= 4,
-		Built_In_Function = 5,
-		Type = 6,
-		Operator = 7,
-		Number
-	} type;
-	Token (int location, const std::string& text, Type type);
+    int location;
+    std::string text;
+
+    enum class Type : int
+    {
+	Text = 0,
+	Keyword = 1,
+	Identifier = 2,
+	Branching = 3,
+	Looping= 4,
+	Built_In_Function = 5,
+	Type = 6,
+	Operator = 7,
+	Number
+    } type;
+    Token (int location, const std::string& text, Type type);
 };
 
 std::vector<Token> parse (const std::string text);
 
 const std::vector<std::string> keywords =
 {
-	"def",
-	"return",
-	"class",
+    "def",
+    "return",
+    "class",
 };
 
 const std::vector<std::string> identifiers =
 {
-	"self",
+    "self",
+    "True",
+    "False",
+    "None",
+    "__name__",
 };
 
 const std::vector<std::string> branching =
 {
-	"if",
-	"else",
-	"elif",
-	"continue",
-	"break",
-	"yield"
+    "is",
+    "and",
+    "not",
+    "if",
+    "else",
+    "elif",
+    "continue",
+    "break",
+    "yield"
 };
 
 const std::vector<std::string> looping =
 {
-	"for",
-	"while",
-	"in"
+    "for",
+    "while",
+    "in"
 };
 
 const std::vector<std::string> built_in_functions =
 {
-	"print",
-	"list",
-	"input",
-	"len",
-	"range"
+    "print",
+    "list",
+    "input",
+    "len",
+    "range"
 };
