@@ -1,7 +1,10 @@
 #include "display.hpp"
 #include "parser.hpp"
+#include "string_util.hpp"
 
+#include <iostream>
 #include <sstream>
+#include <functional>
 
 const std::map<std::string, olc::Pixel> predefined_colors = {
 	{ "white", olc::WHITE },
@@ -87,6 +90,87 @@ void display::input ()
 	// }
 }
 
+static std::map<std::string, std::function<void(display&, std::string)>> commands =
+{
+    {"load_config",     [](display& d, std::string str) { d.colors = Colors(ini::parse_file(str)); }},
+
+    {"foreground",      [](display& d, std::string str) { d.colors.text            = parse_color(str); }},
+    {"background",      [](display& d, std::string str) { d.colors.background      = parse_color(str); }},
+    {"operators",       [](display& d, std::string str) { d.colors.operators       = parse_color(str); }},
+    {"branching",       [](display& d, std::string str) { d.colors.branching       = parse_color(str); }},
+    {"looping",         [](display& d, std::string str) { d.colors.looping         = parse_color(str); }},
+    {"built_ins",       [](display& d, std::string str) { d.colors.built_ins       = parse_color(str); }},
+    {"types",           [](display& d, std::string str) { d.colors.types           = parse_color(str); }},
+    {"numbers",         [](display& d, std::string str) { d.colors.numbers         = parse_color(str); }},
+    {"identifiers",     [](display& d, std::string str) { d.colors.identifiers     = parse_color(str); }},
+    {"text",            [](display& d, std::string str) { d.colors.text            = parse_color(str); }},
+    {"current_line_bg", [](display& d, std::string str) { d.colors.current_line_bg = parse_color(str); }},
+    {"line_number",     [](display& d, std::string str) { d.colors.line_number     = parse_color(str); }},
+    {"line_number_bg",  [](display& d, std::string str) { d.colors.line_number_bg  = parse_color(str); }},
+
+    {"show_cursor_pos", [](display& d, std::string str) { d.show_cursor_pos = !d.show_cursor_pos; }},
+};
+
+#include <chrono>
+using Clock = std::chrono::steady_clock;
+
+auto prevRender = Clock::now();
+bool renderCursor = false;
+std::string cmd = "foreground #000";
+
+static void read_input()
+{
+    for(int key = olc::A; key <= olc::Z; key++){
+	olc::HWButton k = GetKey(key);
+	if(k.bPressed)
+	    cmd += (GetKey(olc::SHIFT).bHeld ? 'A' : 'a') + (key - olc::A);
+    }
+
+    if(GetKey(olc::SPACE).bReleased)
+	    cmd += ' ';
+
+    if(GetKey(olc::BACK).bReleased)
+	if(cmd.length() != 0)
+	    cmd.erase(cmd.length() - 1, 1); 
+}
+
+void display::render_console()
+{
+    int console_height = 16;
+
+    FillRect(0, ScreenHeight () - console_height,
+	     ScreenWidth (), console_height,
+	     parse_color("#111"));
+    DrawString(0, ScreenHeight () - 8 - console_height / 4, ">>", parse_color("#7F7"));
+    DrawString(20, ScreenHeight() - 8 - console_height / 4, cmd, colors.text);
+
+    auto now = Clock::now();
+
+    read_input();
+
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - prevRender).count() > 350) {
+	renderCursor = !renderCursor;
+	prevRender = now;
+    }
+
+    if(renderCursor)
+	FillRect((cmd.length() + 2) * 8 + 4, ScreenHeight() - 8 - console_height / 4,
+		 2, 8,
+		 olc::WHITE);
+
+    olc::HWButton key = GetKey(olc::BACKSLASH);
+    if(key.bReleased) {
+	auto arr = string_util::split_on_first(cmd);
+	std::cout << "arr[0]: \"" << arr[0] << "\", arr[1]: \"" << arr[1] << "\"\n";
+
+	auto iter = commands.find(arr[0]);
+	if(iter != commands.end())
+	{
+	    iter->second(*this, arr[1]);
+	}
+    }
+}
+
 void display::render_text ()
 {
 	int x_offset = std::to_string (text_to_parse->size ()).size () * 8 + line_num_margin;
@@ -119,6 +203,9 @@ void display::render_text ()
 	ss << "cursor position: x = " << cursor_row << ", y = " << cursor_line;
 
 	DrawString(ScreenWidth() / 2 - (ss.str().length() * 8 / 2), ScreenHeight() - 8, ss.str());
+
+    if(should_render_console)
+	render_console();
 }
 
 template<typename IterT>
@@ -136,7 +223,6 @@ static unsigned int longest_string(IterT begin, IterT end) {
     return max_len;
 }
 
-#include <iostream>
 
 bool display::OnUserUpdate (float deltaTime)
 {
@@ -160,7 +246,12 @@ bool display::OnUserUpdate (float deltaTime)
 				   longest_string(text_to_parse->begin(), text_to_parse->end())
 				   - (ScreenWidth() - line_num_margin - 8) / 8 + 5);
 
-	Clear (colors.background);
-	render_text ();
-	return true;
+    if(GetKey(olc::C).bReleased) {
+	should_render_console = !should_render_console;
+	std::cout << "should_render_console: " << should_render_console << '\n';
+    }
+
+    Clear (colors.background);
+    render_text ();
+    return true;
 }

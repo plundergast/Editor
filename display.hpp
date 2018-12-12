@@ -121,13 +121,19 @@ public:
 		colors = Colors (conf);
 	}
 
+    Colors colors;
+    bool show_cursor_pos = false;
 protected:
 	bool OnUserCreate () override;
 	bool OnUserUpdate (float deltaTime) override;
 private:
+    void parse_command(std::string cmd);
 	void input ();
 	void render_text ();
-	Colors colors;
+    void render_console();
+
+    bool should_render_console = false;
+
     int cursor_line = 0;
     int cursor_row = 0;
 
