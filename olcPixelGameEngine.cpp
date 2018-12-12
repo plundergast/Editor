@@ -1139,20 +1139,40 @@ namespace olc
 		mapKeys[0x55] = Key::U; mapKeys[0x56] = Key::V; mapKeys[0x57] = Key::W; mapKeys[0x58] = Key::X; mapKeys[0x59] = Key::Y;
 		mapKeys[0x5A] = Key::Z;
 
+		/// FIXME: Add these keys.
+		// mapKeys[ VK_??? ] = Key::PERIOD;
+		// mapKeys[ VK_??? ] = Key::COMMA;
+		// mapKeys[ VK_??? ] = Key::SLASH;
+		// mapKeys[ VK_??? ] = Key::SEMICOLON;
+		// mapKeys[ VK_??? ] = Key::APOSTROPHE;
+		// mapKeys[ VK_??? ] = Key::BACKSLASH;
+		// mapKeys[ VK_??? ] = Key::LBRACKET;
+		// mapKeys[ VK_??? ] = Key::RBRACKET;
+		// mapKeys[ VK_??? ] = Key::BACKTICK;
+		// mapKeys[ VK_??? ] = Key::MINUS;
+		// mapKeys[ VK_??? ] = Key::EQUAL;
+
 		mapKeys[VK_F1] = Key::F1; mapKeys[VK_F2] = Key::F2; mapKeys[VK_F3] = Key::F3; mapKeys[VK_F4] = Key::F4;
 		mapKeys[VK_F5] = Key::F5; mapKeys[VK_F6] = Key::F6; mapKeys[VK_F7] = Key::F7; mapKeys[VK_F8] = Key::F8;
 		mapKeys[VK_F9] = Key::F9; mapKeys[VK_F10] = Key::F10; mapKeys[VK_F11] = Key::F11; mapKeys[VK_F12] = Key::F12;
 
-		mapKeys[VK_DOWN] = Key::DOWN; mapKeys[VK_LEFT] = Key::LEFT; mapKeys[VK_RIGHT] = Key::RIGHT; mapKeys[VK_UP] = Key::UP;
+		mapKeys[VK_DOWN]  = Key::DOWN;  mapKeys[VK_LEFT] = Key::LEFT;
+		mapKeys[VK_RIGHT] = Key::RIGHT; mapKeys[VK_UP]   = Key::UP;
 
-		mapKeys[VK_BACK] = Key::BACK; mapKeys[VK_ESCAPE] = Key::ESCAPE; mapKeys[VK_RETURN] = Key::ENTER; mapKeys[VK_PAUSE] = Key::PAUSE;
-		mapKeys[VK_SCROLL] = Key::SCROLL; mapKeys[VK_TAB] = Key::TAB; mapKeys[VK_DELETE] = Key::DEL; mapKeys[VK_HOME] = Key::HOME;
-		mapKeys[VK_END] = Key::END; mapKeys[VK_PRIOR] = Key::PGUP; mapKeys[VK_NEXT] = Key::PGDN; mapKeys[VK_INSERT] = Key::INS;
-		mapKeys[VK_SHIFT] = Key::SHIFT; mapKeys[VK_CONTROL] = Key::CTRL;
-		mapKeys[VK_SPACE] = Key::SPACE;
+		mapKeys[VK_BACK]   = Key::BACK;   mapKeys[VK_ESCAPE]  = Key::ESCAPE;
+		mapKeys[VK_RETURN] = Key::ENTER;  mapKeys[VK_PAUSE]   = Key::PAUSE;
+		mapKeys[VK_SCROLL] = Key::SCROLL; mapKeys[VK_TAB]     = Key::TAB;
+		mapKeys[VK_DELETE] = Key::DEL;    mapKeys[VK_HOME]    = Key::HOME;
+		mapKeys[VK_END]    = Key::END;    mapKeys[VK_PRIOR]   = Key::PGUP;
+		mapKeys[VK_NEXT]   = Key::PGDN;   mapKeys[VK_INSERT]  = Key::INS;
+		mapKeys[VK_SHIFT]  = Key::SHIFT;  mapKeys[VK_CONTROL] = Key::CTRL;
+		mapKeys[VK_SPACE]  = Key::SPACE;
 
-		mapKeys[0x30] = Key::K0; mapKeys[0x31] = Key::K1; mapKeys[0x32] = Key::K2; mapKeys[0x33] = Key::K3; mapKeys[0x34] = Key::K4;
-		mapKeys[0x35] = Key::K5; mapKeys[0x36] = Key::K6; mapKeys[0x37] = Key::K7; mapKeys[0x38] = Key::K8; mapKeys[0x39] = Key::K9;
+		mapKeys[0x30] = Key::K0; mapKeys[0x31] = Key::K1;
+		mapKeys[0x32] = Key::K2; mapKeys[0x33] = Key::K3;
+		mapKeys[0x34] = Key::K4; mapKeys[0x35] = Key::K5;
+		mapKeys[0x36] = Key::K6; mapKeys[0x37] = Key::K7;
+		mapKeys[0x38] = Key::K8; mapKeys[0x39] = Key::K9;
 
 		return olc_hWnd;
 	}
@@ -1241,20 +1261,47 @@ namespace olc
 		mapKeys[0x75] = Key::U; mapKeys[0x76] = Key::V; mapKeys[0x77] = Key::W; mapKeys[0x78] = Key::X; mapKeys[0x79] = Key::Y;
 		mapKeys[0x7A] = Key::Z;
 
-		mapKeys[XK_F1] = Key::F1; mapKeys[XK_F2] = Key::F2; mapKeys[XK_F3] = Key::F3; mapKeys[XK_F4] = Key::F4;
-		mapKeys[XK_F5] = Key::F5; mapKeys[XK_F6] = Key::F6; mapKeys[XK_F7] = Key::F7; mapKeys[XK_F8] = Key::F8;
-		mapKeys[XK_F9] = Key::F9; mapKeys[XK_F10] = Key::F10; mapKeys[XK_F11] = Key::F11; mapKeys[XK_F12] = Key::F12;
+		mapKeys[XK_period]       = Key::PERIOD;
+		mapKeys[XK_comma]        = Key::COMMA;
+		mapKeys[XK_slash]        = Key::SLASH;
+		mapKeys[XK_bracketleft]  = Key::LBRACKET;
+		mapKeys[XK_bracketright] = Key::RBRACKET;
+		mapKeys[XK_semicolon]    = Key::SEMICOLON;
+		mapKeys[XK_apostrophe]   = Key::APOSTROPHE;
+		mapKeys[XK_backslash]    = Key::BACKSLASH;
 
-		mapKeys[XK_Down] = Key::DOWN; mapKeys[XK_Left] = Key::LEFT; mapKeys[XK_Right] = Key::RIGHT; mapKeys[XK_Up] = Key::UP;
+		mapKeys[XK_grave] = Key::BACKTICK; // `
+		mapKeys[XK_minus] = Key::MINUS;
+		mapKeys[XK_equal] = Key::EQUAL;
 
-		mapKeys[XK_BackSpace] = Key::BACK; mapKeys[XK_Escape] = Key::ESCAPE; mapKeys[XK_Linefeed] = Key::ENTER;	mapKeys[XK_Pause] = Key::PAUSE;
-		mapKeys[XK_Scroll_Lock] = Key::SCROLL; mapKeys[XK_Tab] = Key::TAB; mapKeys[XK_Delete] = Key::DEL; mapKeys[XK_Home] = Key::HOME;
-		mapKeys[XK_End] = Key::END; mapKeys[XK_Page_Up] = Key::PGUP; mapKeys[XK_Page_Down] = Key::PGDN;	mapKeys[XK_Insert] = Key::INS;
-		mapKeys[XK_Shift_L] = Key::SHIFT; mapKeys[XK_Shift_R] = Key::SHIFT; mapKeys[XK_Control_L] = Key::CTRL; mapKeys[XK_Control_R] = Key::CTRL;
+		mapKeys[XK_F1]  = Key::F1;  mapKeys[XK_F2]  = Key::F2;  mapKeys[XK_F3]  = Key::F3;
+		mapKeys[XK_F4]  = Key::F4;  mapKeys[XK_F5]  = Key::F5;  mapKeys[XK_F6]  = Key::F6;
+		mapKeys[XK_F7]  = Key::F7;  mapKeys[XK_F8]  = Key::F8;  mapKeys[XK_F9]  = Key::F9;
+		mapKeys[XK_F10] = Key::F10; mapKeys[XK_F11] = Key::F11; mapKeys[XK_F12] = Key::F12;
+
+		mapKeys[XK_Up]   = Key::UP;   mapKeys[XK_Down]  = Key::DOWN;
+		mapKeys[XK_Left] = Key::LEFT; mapKeys[XK_Right] = Key::RIGHT;
+
+		mapKeys[XK_BackSpace] = Key::BACK;   mapKeys[XK_Tab]    = Key::TAB;
+		mapKeys[XK_Escape]    = Key::ESCAPE; mapKeys[XK_Return] = Key::ENTER;
+
+		mapKeys[XK_Pause] = Key::PAUSE;
+		mapKeys[XK_Scroll_Lock] = Key::SCROLL;
+
+		mapKeys[XK_Insert]  = Key::INS;  mapKeys[XK_Delete]    = Key::DEL;
+		mapKeys[XK_Home]    = Key::HOME; mapKeys[XK_End]       = Key::END;
+		mapKeys[XK_Page_Up] = Key::PGUP; mapKeys[XK_Page_Down] = Key::PGDN;
+
+		mapKeys[XK_Shift_L] = Key::SHIFT; mapKeys[XK_Control_L] = Key::CTRL;
+		mapKeys[XK_Shift_R] = Key::SHIFT; mapKeys[XK_Control_R] = Key::CTRL;
+
 		mapKeys[XK_space] = Key::SPACE;
 
-		mapKeys[XK_0] = Key::K0; mapKeys[XK_1] = Key::K1; mapKeys[XK_2] = Key::K2; mapKeys[XK_3] = Key::K3; mapKeys[XK_4] = Key::K4;
-		mapKeys[XK_5] = Key::K5; mapKeys[XK_6] = Key::K6; mapKeys[XK_7] = Key::K7; mapKeys[XK_8] = Key::K8; mapKeys[XK_9] = Key::K9;
+		mapKeys[XK_0] = Key::K0; mapKeys[XK_1] = Key::K1;
+		mapKeys[XK_2] = Key::K2; mapKeys[XK_3] = Key::K3;
+		mapKeys[XK_4] = Key::K4; mapKeys[XK_5] = Key::K5;
+		mapKeys[XK_6] = Key::K6; mapKeys[XK_7] = Key::K7;
+		mapKeys[XK_8] = Key::K8; mapKeys[XK_9] = Key::K9;
 
 		return olc_Display;
 	}
