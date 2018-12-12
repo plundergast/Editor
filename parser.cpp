@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "parser.hpp"
 
 Token::Token (int location, const std::string& text, Type type) :
     location{ location },

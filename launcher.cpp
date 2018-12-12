@@ -4,9 +4,9 @@
 //#define debug_the_parser
 
 #ifdef debug_the_parser
-#include "parser.h"
+#include "parser.hpp"
 #else
-#include "display.h"
+#include "display.hpp"
 #endif
 
 int main ()
