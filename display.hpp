@@ -128,4 +128,5 @@ private:
 	void input ();
 	void render_text ();
 	Colors colors;
+    int cursor_line = 0;
 };

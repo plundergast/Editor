@@ -90,7 +90,7 @@ void display::render_text ()
 	int lineNumMargin = 12;
 
 	int x_offset = std::to_string (text_to_parse->size ()).size () * 8 + lineNumMargin;
-	FillRect (0, 32, ScreenWidth (), 8, colors.current_line_bg);
+	FillRect (0, cursor_line * 8, ScreenWidth (), 8, colors.current_line_bg);
 	FillRect (0, 0, x_offset, ScreenHeight (), colors.line_number_bg);
 
 	for (int line = 0; line < text_to_parse->size (); ++line)
@@ -118,6 +118,14 @@ void display::render_text ()
 
 bool display::OnUserUpdate (float deltaTime)
 {
+    olc::HWButton down = GetKey(olc::DOWN);
+    olc::HWButton up = GetKey(olc::UP);
+
+    if(up.bReleased)
+	cursor_line = std::max<int>(cursor_line - 1, 0);
+    else if(down.bReleased)
+	cursor_line = std::min<int>(cursor_line + 1, text_to_parse->size() - 1);
+
 	Clear (colors.background);
 	render_text ();
 	return true;
