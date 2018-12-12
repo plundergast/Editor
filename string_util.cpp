@@ -19,19 +19,19 @@ namespace string_util
 		return res;
 	}
 
-	vector<string> split_on_first (const string& str, char delim)
+    array<string,2> split_on_first (const string& str, char delim)
 	{
-		vector<string> res;
-		res.reserve (2);
+	    array<string,2> res;
 
 		if (str.find_first_of (delim) == std::string::npos)
 		{
-			res.push_back (str);
+			res[0] = str;
+			res[1] = "";
 			return res;
 		}
 
-		res.push_back (str.substr (0, str.find_first_of (delim)));
-		res.push_back (str.substr (str.find_first_of (delim)));
+		res[0] = str.substr (0, str.find_first_of (delim));
+		res[1] = str.substr (str.find_first_of (delim));
 
 		return res;
 	}

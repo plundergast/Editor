@@ -16,7 +16,7 @@ namespace string_util {
     string trim(const string& s);
     string unquote(const string& s);
 
-    vector<string> split_on_first(const string& line, char c = ' ');
+    array<string,2> split_on_first (const string& str, char delim = ' ');
     vector<string> split_on(const string& line, char c = ' ');
 
     template <typename pred>
