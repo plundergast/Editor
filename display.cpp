@@ -21,12 +21,13 @@ void display::input ()
 void display::render_text ()
 {
 	int x_offset = std::to_string(text_to_parse->size()).size() * 8;
+
 	FillRect (0, 32, ScreenWidth (), 8, olc::Pixel (230, 230, 230));
 	FillRect (0, 0, x_offset, ScreenHeight (), olc::Pixel(225,225,225));
 	
 	for (int line = 0; line < text_to_parse->size (); ++line)
 	{	
-		DrawString (4, line * 8, std::to_string (line), olc::DARK_BLUE);
+		DrawString (0, line * 8, std::to_string (line), olc::DARK_BLUE);
 		for (const auto& token : parse (text_to_parse->at (line)))
 		{
 			olc::Pixel color = olc::BLACK;
@@ -46,12 +47,15 @@ void display::render_text ()
 				break;
 			case Token::Type::Built_In_Function:
 				color = olc::DARK_YELLOW;
-				break;
+				break;	
 			case Token::Type::Type:
 				color = olc::GREY;
 				break;
 			case Token::Type::Number:
 				color = olc::DARK_RED;
+				break;
+			case Token::Type::Identifier:
+				color = olc::BLUE;
 				break;
 			}
 			DrawString (token.location * 8 + x_offset, line * 8, token.text, color);

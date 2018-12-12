@@ -8,9 +8,6 @@
 #else
 #include "display.h"
 #endif
-
-
-
 int main ()
 {
 	std::shared_ptr<std::vector<std::string>> text (std::make_shared<std::vector<std::string>> (
