@@ -7,7 +7,7 @@ Token::Token (int location, const std::string& text, Type type) :
 {
 }
 
-const bool is_operator (const char& character)
+inline const bool is_operator (const char& character)
 {
     switch (character)
     {
@@ -27,50 +27,50 @@ const bool is_operator (const char& character)
     }
 }
 
-const bool is_delimiter (const char& character)
+inline const bool is_delimiter (const char& character)
 {
     switch (character)
     {
     case ';':
-    case ',':
     case '.':
+    case ',':
 	return true;
     default:
 	return false;
     }
 }
 
-const bool is_space (const char& character)
+inline const bool is_space (const char& character)
 {
     return character == ' ';
 }
 
-const bool is_comment_beginning (const char& character)
+inline const bool is_comment_beginning (const char& character)
 {
     return character == '#';
 }
 
-const bool is_newline (const char& character)
+inline const bool is_newline (const char& character)
 {
     return character == '\n';
 }
 
-const bool is_comment_end (const char& character)
+inline const bool is_comment_end (const char& character)
 {
     return is_newline (character);
 }
 
-const bool is_string_toggle (const char& character)
+inline const bool is_string_toggle (const char& character)
 {
     return character == '\"' || character == '\'';
 }
 
-const bool is_hidden (const char& character)
+inline const bool is_hidden (const char& character)
 {
-    return character == '\t' || character == '\n';
+    return character == '\t' || is_newline(character);
 }
 
-const bool is_number (const char& character)
+inline const bool is_number (const char& character)
 {
     switch (character)
     {
@@ -89,7 +89,7 @@ const bool is_number (const char& character)
     return false;
 }
 
-const bool is_appendable (const char& character)
+inline const bool is_appendable (const char& character)
 {
     return !is_number(character) &&  !is_hidden(character) && !is_operator (character) && !is_delimiter (character) && !is_space (character) || is_string_toggle(character);
 }
@@ -156,6 +156,16 @@ void push_token (const std::string& text, int beginning, std::vector<Token>& out
     out.push_back (Token (beginning, text, type));
 }
 
+void push_singular_token (std::string& word, const	char& character, int old_beginning, int character_distance, Token::Type type, bool& inside_text, std::vector<Token>& tokens)
+{
+    push_token (word, old_beginning, tokens);
+    word.clear ();
+    word.push_back (character);
+    tokens.push_back (Token (character_distance, word, type));
+    word.clear ();
+    inside_text = false;
+}
+
 std::vector<Token> parse (const std::string text)
 {
     std::vector<Token> tokens;
@@ -215,14 +225,62 @@ std::vector<Token> parse (const std::string text)
 
 	++string_reader;
 
-
-	if (is_appendable && string_reader == string_end)
+	bool inside_text	= false;
+	bool inside_string  = false;
+	int token_beginning = 0;
+	int tabbing = 0;
+	while (string_reader < string_end)
 	{
-	    push_token (word, token_beginning, tokens);
-	    word.clear ();
-	    inside_text = false;
+	    const char& character = *string_reader;
+	    const bool char_is_operator   = is_operator (character);
+	    const bool char_is_delimiter  = is_delimiter (character);
+	    const bool char_is_space      = is_space (character);
+	    const bool char_is_appendable = is_appendable (character);
+	    const bool char_is_number     = is_number (character);
+	    const int character_distance  = std::distance (text.begin (), string_reader) + tabbing;
+
+	    if (character == '\t')
+	    {
+		tabbing += 3;
+	    }
+	    else if (char_is_number)
+	    {
+		push_singular_token (word, character, token_beginning, character_distance, Token::Type::Number, inside_text, tokens);
+	    }
+	    else if (char_is_operator || char_is_delimiter)
+	    {
+		push_singular_token (word, character, token_beginning, character_distance, Token::Type::Operator, inside_text, tokens);
+	    }
+	    else if (char_is_appendable)
+	    {
+		if (!inside_text)
+		{
+		    // push tokens
+		    token_beginning = character_distance;
+		    inside_text = true;
+		}
+		word.push_back(character);
+	    }
+
+	    // spaces split 'delimit' the words
+	    else if (char_is_space)
+	    {
+		push_token (word, token_beginning, tokens);
+		word.clear ();
+		inside_text = false;
+	    }
+
+	    ++string_reader;
+
+
+	    if (is_appendable && string_reader == string_end)
+	    {
+		push_token (word, token_beginning, tokens);
+		word.clear ();
+		inside_text = false;
+	    }
 	}
     }
-		
+
     return tokens;
 }
