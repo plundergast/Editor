@@ -299,9 +299,8 @@ void display::render_console()
 void display::render_text ()
 {
     int x_offset = std::to_string (text_to_parse->num_lines()).size () * 8 + line_num_margin;
-	FillRect (0, cursor_line * 8, ScreenWidth (), 8, colors.current_line_bg);
+	FillRect (0, text_to_parse->get_cursor_y() * 8, ScreenWidth (), 8, colors.current_line_bg);
 	FillRect (0, 0, x_offset - cursor_row * 8, ScreenHeight (), colors.line_number_bg);
-
 
     if(renderCursor)
 	FillRect(x_offset + text_to_parse->get_cursor_x() * 8, text_to_parse->get_cursor_y() * 8,
