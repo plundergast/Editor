@@ -1,8 +1,14 @@
+#pragma once
+
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
+
 #include <memory>
+#include <cstdlib>
+
 #include "string_util.hpp"
 #include "ini.hpp"
+#include "buffer.hpp"
 
 extern const std::map<std::string, olc::Pixel> predefined_colors;
 
@@ -113,7 +119,7 @@ class display : public olc::PixelGameEngine
 public:
 	display ();
 	~display ();
-	std::shared_ptr <std::vector<std::string>> text_to_parse;
+    std::unique_ptr<buffer> text_to_parse;
 
 	inline void read_config ()
 	{
@@ -123,6 +129,8 @@ public:
 
     Colors colors;
     bool show_cursor_pos = false;
+
+    void exit() { std::exit(EXIT_SUCCESS); }
 protected:
 	bool OnUserCreate () override;
 	bool OnUserUpdate (float deltaTime) override;
@@ -138,4 +146,7 @@ private:
     int cursor_row = 0;
 
     int line_num_margin = 12;
+
+    buffer* current_buffer = nullptr;
+    std::unique_ptr<buffer> console_buffer;
 };

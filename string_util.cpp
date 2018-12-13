@@ -31,7 +31,7 @@ namespace string_util
 		}
 
 		res[0] = str.substr (0, str.find_first_of (delim));
-		res[1] = str.substr (str.find_first_of (delim));
+		res[1] = trim(str.substr (str.find_first_of (delim)));
 
 		return res;
 	}

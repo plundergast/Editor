@@ -70,7 +70,9 @@ const std::map<std::string, olc::Pixel> predefined_colors = {
 
 display::display ()
 {
-	read_config ();
+    console_buffer = std::make_unique<buffer>(256);
+    current_buffer = text_to_parse.get();
+    read_config ();
 }
 
 display::~display ()
@@ -83,32 +85,150 @@ bool display::OnUserCreate ()
 
 void display::input ()
 {
-	// Note: I don't know how to do this.
-	// if(GetKey(olc::R).bReleased) {
-	// 	ReadConfig();
-	// 	colors.Background = olc::RED;
-	// }
+    if(current_buffer == nullptr)
+	return;
+#define CHECK_KEY(key, not_shifted, shifted)				\
+    do { if(GetKey((key)).bReleased) current_buffer->insert_at_cursor(shift ? (shifted) : (not_shifted)); } while(0)
+
+    bool shift = GetKey(olc::SHIFT).bHeld;
+
+    if(GetKey(olc::UP).bReleased)    current_buffer->up();
+    if(GetKey(olc::DOWN).bReleased)  current_buffer->down();
+    if(GetKey(olc::LEFT).bReleased)  current_buffer->left();
+    if(GetKey(olc::RIGHT).bReleased) current_buffer->right();
+
+    CHECK_KEY(olc::SPACE, ' ', ' ');
+    if(GetKey(olc::BACK).bReleased) current_buffer->delete_at_cursor();
+    if(GetKey(olc::DEL).bReleased)  current_buffer->delete_after_cursor();
+
+    if(GetKey(olc::HOME).bReleased) current_buffer->seek_bol();
+    if(GetKey(olc::END).bReleased)  current_buffer->seek_eol();
+
+    for(int key = olc::A; key <= olc::Z; key++){
+	olc::HWButton k = GetKey(key);
+	if(k.bPressed)
+	    current_buffer->insert_at_cursor((shift ? 'A' : 'a') + (key - olc::A));
+    }
+
+    const char* const chars = ")!@#$%^&*(";
+    
+    for(int key = olc::K0; key <= olc::K9; key++){
+	olc::HWButton k = GetKey(key);
+	if(k.bPressed)
+	    current_buffer->insert_at_cursor((shift ? chars[key - olc::K0] : '0' + (key - olc::K0)));
+    }
+
+    CHECK_KEY(olc::BACKTICK, '`', '~');
+    CHECK_KEY(olc::COMMA, ',', '<');
+    CHECK_KEY(olc::SLASH, '/', '?');
+    CHECK_KEY(olc::PERIOD, '.', '>');
+    CHECK_KEY(olc::SEMICOLON, ';', ':');
+    CHECK_KEY(olc::APOSTROPHE, '\'', '"');
+    CHECK_KEY(olc::BACKSLASH, '\\', '|');
+    CHECK_KEY(olc::LBRACKET, '[', '{');
+    CHECK_KEY(olc::RBRACKET, ']', '}');
+    CHECK_KEY(olc::MINUS, '-', '_');
+    CHECK_KEY(olc::EQUAL, '=', '+');
+
+#undef CHECK_KEY
 }
 
-static std::map<std::string, std::function<void(display&, std::string)>> commands =
+struct Command {
+    std::string name;
+    std::string description;
+    int numArgs;
+    std::function<void(display&, std::string)> func;
+
+    void operator()(display& d, std::string str) { func(d, str); }
+};
+
+static std::map<std::string, std::string> cmd_aliases =
 {
-    {"load_config",     [](display& d, std::string str) { d.colors = Colors(ini::parse_file(str)); }},
+    {"q", "quit"},
+    {"fg", "foreground"},
+    {"bg", "background"},
+    {"lc", "load_config"},
+};
 
-    {"foreground",      [](display& d, std::string str) { d.colors.text            = parse_color(str); }},
-    {"background",      [](display& d, std::string str) { d.colors.background      = parse_color(str); }},
-    {"operators",       [](display& d, std::string str) { d.colors.operators       = parse_color(str); }},
-    {"branching",       [](display& d, std::string str) { d.colors.branching       = parse_color(str); }},
-    {"looping",         [](display& d, std::string str) { d.colors.looping         = parse_color(str); }},
-    {"built_ins",       [](display& d, std::string str) { d.colors.built_ins       = parse_color(str); }},
-    {"types",           [](display& d, std::string str) { d.colors.types           = parse_color(str); }},
-    {"numbers",         [](display& d, std::string str) { d.colors.numbers         = parse_color(str); }},
-    {"identifiers",     [](display& d, std::string str) { d.colors.identifiers     = parse_color(str); }},
-    {"text",            [](display& d, std::string str) { d.colors.text            = parse_color(str); }},
-    {"current_line_bg", [](display& d, std::string str) { d.colors.current_line_bg = parse_color(str); }},
-    {"line_number",     [](display& d, std::string str) { d.colors.line_number     = parse_color(str); }},
-    {"line_number_bg",  [](display& d, std::string str) { d.colors.line_number_bg  = parse_color(str); }},
+static std::map<std::string, Command> commands =
+{
+    {"quit",
+     {"quit", "Exits out of the program.", 0,
+      [](display& d, std::string str){ d.exit(); }}
+    },
 
-    {"show_cursor_pos", [](display& d, std::string str) { d.show_cursor_pos = !d.show_cursor_pos; }},
+    {"load_config",
+     {"load_config", "Loads a configuration from a given file", 1,
+      [](display& d, std::string str) { d.colors = Colors(ini::parse_file(str)); }}
+    },
+
+    {"foreground",
+     { "foreground", "Does a thing", 1,
+       [](display& d, std::string str) { d.colors.text = parse_color(str); }}
+    },
+    
+    {"background",
+     { "background", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.background = parse_color(str); }}
+    },
+
+    {"operators",
+     { "operators", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.operators = parse_color(str); }}
+    },
+
+    {"branching",
+     { "branching", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.branching = parse_color(str); }}
+    },
+
+    {"looping",
+     { "looping", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.looping = parse_color(str); }}
+    },
+
+    {"built_ins",
+     { "built_ins", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.built_ins = parse_color(str); }}
+    },
+
+    {"types",
+     {"types", "Does a thing.", 1,
+      [](display& d, std::string str) { d.colors.types = parse_color(str); }}
+    },
+
+    {"numbers",
+     {"numbers", "Does a thing.", 1,
+      [](display& d, std::string str) { d.colors.numbers = parse_color(str); }}},
+    {"identifiers",
+     { "identifiers", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.identifiers = parse_color(str); }}
+    },
+
+    {"text",
+     {"text", "Does a thing.", 1,
+      [](display& d, std::string str) { d.colors.text = parse_color(str); }}
+    },
+
+    {"current_line_bg",
+     {"current_line_bg", "Does a thing.", 1,
+      [](display& d, std::string str) { d.colors.current_line_bg = parse_color(str); }}
+    },
+
+    {"line_number",
+     { "line_number", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.line_number = parse_color(str); }}
+    },
+
+    {"line_number_bg",
+     { "line_number_bg", "Does a thing.", 1,
+       [](display& d, std::string str) { d.colors.line_number_bg  = parse_color(str); }}
+    },
+
+    {"show_cursor_pos",
+     { "show_cursor_pos", "Does a thing.", 1,
+       [](display& d, std::string str) { d.show_cursor_pos = !d.show_cursor_pos; }}
+    },
 };
 
 #include <chrono>
@@ -116,71 +236,84 @@ using Clock = std::chrono::steady_clock;
 
 auto prevRender = Clock::now();
 bool renderCursor = false;
-std::string cmd = "foreground #000";
-
-static void read_input()
-{
-    for(int key = olc::A; key <= olc::Z; key++){
-	olc::HWButton k = GetKey(key);
-	if(k.bPressed)
-	    cmd += (GetKey(olc::SHIFT).bHeld ? 'A' : 'a') + (key - olc::A);
-    }
-
-    if(GetKey(olc::SPACE).bReleased)
-	    cmd += ' ';
-
-    if(GetKey(olc::BACK).bReleased)
-	if(cmd.length() != 0)
-	    cmd.erase(cmd.length() - 1, 1); 
-}
+bool ignore_input = false;
+bool console_enabled = false;
 
 void display::render_console()
 {
+    if(!console_enabled) {
+	current_buffer = text_to_parse.get();
+	return;
+    }
+    
     int console_height = 16;
 
     FillRect(0, ScreenHeight () - console_height,
 	     ScreenWidth (), console_height,
 	     parse_color("#111"));
-    DrawString(0, ScreenHeight () - 8 - console_height / 4, ">>", parse_color("#7F7"));
-    DrawString(20, ScreenHeight() - 8 - console_height / 4, cmd, colors.text);
 
-    auto now = Clock::now();
+    const std::string prompt = ":";
+    const olc::Pixel prompt_color = parse_color("#7f7");
 
-    read_input();
-
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - prevRender).count() > 350) {
-	renderCursor = !renderCursor;
-	prevRender = now;
-    }
+    // Render a prompt.
+    DrawString(0, ScreenHeight () - 8 - console_height / 4, prompt, prompt_color);
+    // Render the actual command.
+    DrawString(prompt.length() * 8,
+	       ScreenHeight() - 8 - console_height / 4,
+	       *console_buffer,
+	       colors.text);
 
     if(renderCursor)
-	FillRect((cmd.length() + 2) * 8 + 4, ScreenHeight() - 8 - console_height / 4,
+	FillRect((prompt.length() + console_buffer->cursor_pos) * 8, ScreenHeight() - 8 - console_height / 4,
 		 2, 8,
 		 olc::WHITE);
 
-    olc::HWButton key = GetKey(olc::BACKSLASH);
-    if(key.bReleased) {
-	auto arr = string_util::split_on_first(cmd);
+    if(GetKey(olc::ENTER).bReleased) {
+	auto arr = string_util::split_on_first(*console_buffer);
 	std::cout << "arr[0]: \"" << arr[0] << "\", arr[1]: \"" << arr[1] << "\"\n";
 
+	auto alias = cmd_aliases.find(arr[0]);
 	auto iter = commands.find(arr[0]);
 	if(iter != commands.end())
 	{
+	    std::cout << console_buffer->get_current_line() << '\n';
 	    iter->second(*this, arr[1]);
+	    should_render_console = false;
+	    console_buffer->reset();
+	    current_buffer = text_to_parse.get(); 
+	}
+	else if(alias != cmd_aliases.end() &&
+		  commands.find(alias->second) != commands.end())
+	{
+	    std::cout << console_buffer->get_current_line() << '\n';
+	    commands[alias->second](*this, arr[1]);
+	    should_render_console = false;
+	    console_buffer->reset();
+	    current_buffer = text_to_parse.get(); 
 	}
     }
+
+    ignore_input = false;
 }
 
 void display::render_text ()
 {
-	int x_offset = std::to_string (text_to_parse->size ()).size () * 8 + line_num_margin;
+    int x_offset = std::to_string (text_to_parse->num_lines()).size () * 8 + line_num_margin;
 	FillRect (0, cursor_line * 8, ScreenWidth (), 8, colors.current_line_bg);
 	FillRect (0, 0, x_offset - cursor_row * 8, ScreenHeight (), colors.line_number_bg);
 
-	for (int line = 0; line < text_to_parse->size (); ++line)
+
+    if(renderCursor)
+	FillRect(x_offset + text_to_parse->get_cursor_x() * 8, text_to_parse->get_cursor_y() * 8,
+		 2, 8,
+		 olc::WHITE);
+
+	auto v = text_to_parse->as_lines_vec();
+
+	for (int line = 0; line < v.size(); ++line)
 	{
 		DrawString (line_num_margin / 2 - cursor_row * 8, line * 8, std::to_string (line), colors.line_number);
-		for (const auto& token : parse (text_to_parse->at (line)))
+		for (const auto& token : parse (v.at (line)))
 		{
 			olc::Pixel color = olc::BLACK;
 			switch (token.type)
@@ -199,8 +332,14 @@ void display::render_text ()
 		}
 	}
 
+	char c = text_to_parse->char_under_cursor();
+
 	std::stringstream ss;
-	ss << "cursor position: x = " << cursor_row << ", y = " << cursor_line;
+	ss << "cursor position: x = " << text_to_parse->get_cursor_x()
+	   << ", y = " << text_to_parse->get_cursor_y()
+	   << " (cursor_pos: " << text_to_parse->cursor_pos
+	   << ", under cursor: " << (c == '\n' ? "\\n" : std::to_string((char)c)) << ")";
+	// ss << text_to_parse->get_current_line();
 
 	DrawString(ScreenWidth() / 2 - (ss.str().length() * 8 / 2), ScreenHeight() - 8, ss.str());
 
@@ -223,33 +362,35 @@ static unsigned int longest_string(IterT begin, IterT end) {
     return max_len;
 }
 
-
 bool display::OnUserUpdate (float deltaTime)
 {
-    olc::HWButton down = GetKey(olc::DOWN);
-    olc::HWButton up = GetKey(olc::UP);
+    current_buffer = text_to_parse.get(); 
 
-    olc::HWButton shift = GetKey(olc::SHIFT);
-
-    if(up.bReleased)
-	cursor_line = std::max<int>(cursor_line - (shift.bHeld ? 10 : 1), 0);
-    else if(down.bReleased)
-	cursor_line = std::min<int>(cursor_line + (shift.bHeld ? 10 : 1), text_to_parse->size() - 1);
-
-    olc::HWButton left = GetKey(olc::LEFT);
-    olc::HWButton right = GetKey(olc::RIGHT);
-
-    if(left.bReleased)
-	cursor_row = std::max<int>(cursor_row - (shift.bHeld ? 10 : 1), 0);
-    else if(right.bReleased)
-	cursor_row = std::min<int>(cursor_row + (shift.bHeld ? 10 : 1),
-				   longest_string(text_to_parse->begin(), text_to_parse->end())
-				   - (ScreenWidth() - line_num_margin - 8) / 8 + 5);
-
-    if(GetKey(olc::C).bReleased) {
-	should_render_console = !should_render_console;
-	std::cout << "should_render_console: " << should_render_console << '\n';
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - prevRender).count() > 350) {
+	renderCursor = !renderCursor;
+	prevRender = Clock::now();
     }
+
+    if(GetKey(olc::SEMICOLON).bReleased
+       && GetKey(olc::SHIFT).bHeld
+       && !should_render_console)
+    {
+	should_render_console = true;
+	current_buffer = console_buffer.get();
+    }
+    if(GetKey(olc::ESCAPE).bReleased
+       && should_render_console)
+    {
+	should_render_console = false;
+	console_buffer->delete_line();
+	current_buffer = text_to_parse.get(); 
+    }
+    if(current_buffer == text_to_parse.get()
+       && current_buffer != nullptr
+       && GetKey(olc::ENTER).bReleased)
+	text_to_parse->insert_at_cursor('\n');
+
+    input();
 
     Clear (colors.background);
     render_text ();
